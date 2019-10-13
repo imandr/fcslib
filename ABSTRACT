@@ -1,0 +1,16 @@
+ABSTRACT
+
+FCSLIB is a collection of Python modules used by some other products
+developed by FCS group. Although FCSLIB is not meant to be used as a separate
+product, it can be used as a collection of useful Python classes.
+FCSLIB includes the following modules:
+
+    Parser      - a module used to parse lines in format
+        <field> = <value> [<value> ...] #comment
+    config      - FBS/FBSNG configuration file parser
+    Selector    - OO wrap around UNIX library function "select"
+    SockStream  - class used to send messages over TCP connection
+    TCPServer   - virtual base class for TCP server development
+    futil       - miscellaneous UNIX file system tools
+    cvtime      - date/time specification parser
+

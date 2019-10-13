@@ -1,0 +1,31 @@
+#
+# @(#) $Id: fcslib.table,v 1.3 2000/10/02 15:21:17 ivm Exp $
+#
+# $Log: fcslib.table,v $
+# Revision 1.3  2000/10/02 15:21:17  ivm
+# v1_9: do not setup python
+#
+# Revision 1.2  2000/05/15 20:51:52  ivm
+# Use envRemove() instead of pathRemove()
+#
+# Revision 1.1  2000/04/25 18:09:58  ivm
+# Added Makefile, UPS stuff
+#
+#
+FILE=TABLE
+PRODUCT=fcslib
+
+Group:
+  Flavor=ANY
+  Qualifiers=""
+ 
+
+  Action=Setup
+    setupEnv()
+    proddir()
+    envPrepend(PYTHONPATH,"${UPS_PROD_DIR}/lib")
+  Action=Unsetup
+    unsetupEnv()
+    unprodDir()
+    envRemove(PYTHONPATH, "${UPS_PROD_DIR}/lib")
+END:
