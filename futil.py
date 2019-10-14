@@ -3,11 +3,11 @@
 #
 # $Author: ivm $
 #
-#	Collection of general-purpose file system utilities.
-#	Currently, there is one function here:
+#       Collection of general-purpose file system utilities.
+#       Currently, there is one function here:
 #
-#	rmdirrec(path)	- equivalent of "rm -rf", deletes the specified
-#					directory and all files/directories underneath it.
+#       rmdirrec(path)  - equivalent of "rm -rf", deletes the specified
+#                                       directory and all files/directories underneath it.
 #
 # $Log: futil.py,v $
 # Revision 1.4  2002/05/07 15:25:20  ivm
@@ -43,27 +43,27 @@ import errno
 import stat
 
 def is_dir(path):
-	try:	return stat.S_ISDIR(os.stat(path)[stat.ST_MODE])
-	except: return 0
+        try:    return stat.S_ISDIR(os.stat(path)[stat.ST_MODE])
+        except: return 0
 
 def is_link(path):
-	try:	return stat.S_ISLNK(os.lstat(path)[stat.ST_MODE])
-	except: return 0
+        try:    return stat.S_ISLNK(os.lstat(path)[stat.ST_MODE])
+        except: return 0
 
 def rmdirrec(path, keep_root = 0):
-	lst = os.listdir(path)
-	for n in lst:
-		p = path + '/' + n
-		# try to remove it
-		if is_link(p):
-			os.unlink(p)
-		elif is_dir(p):
-			rmdirrec(p)
-		else:
-			os.unlink(p)
-	if not keep_root:
-		os.rmdir(path)
+        lst = os.listdir(path)
+        for n in lst:
+                p = path + '/' + n
+                # try to remove it
+                if is_link(p):
+                        os.unlink(p)
+                elif is_dir(p):
+                        rmdirrec(p)
+                else:
+                        os.unlink(p)
+        if not keep_root:
+                os.rmdir(path)
 
 if __name__ == '__main__':
-	import sys
-	rmdirrec(sys.argv[1])
+        import sys
+        rmdirrec(sys.argv[1])

@@ -10,11 +10,11 @@
 # <pattern> can be either standard Regular Expression, or
 # a range specification in format:
 #
-#	<head><<number1>-<number2>>
+#       <head><<number1>-<number2>>
 #
 # In this case, the pattern will match any string which looks like:
 #
-#	<head><number>
+#       <head><number>
 #
 # as long as the number1 <= number <= number2 and <head> is the same.
 #
@@ -35,40 +35,40 @@
 #
 # Constructor:
 # ------------
-#	ConfigFile(file-name)	- opens the configuration file and reads all the
-#				  information into internal data structure. Makes
-#				  the information ready to be retrieved by
-#				  other class methods
+#       ConfigFile(file-name)   - opens the configuration file and reads all the
+#                                 information into internal data structure. Makes
+#                                 the information ready to be retrieved by
+#                                 other class methods
 #
-#	getValue(set-name, client-id, field-name) - returns value of the configuration
-#				  parameter specified by triplet 
-#				  <type, client-id, field-name>. If the field is not
-#				  defined for <type, client-id>, but has a value for
-#				  <type, '***'>, then the default (***) value is
-#				  returned.
+#       getValue(set-name, client-id, field-name) - returns value of the configuration
+#                                 parameter specified by triplet 
+#                                 <type, client-id, field-name>. If the field is not
+#                                 defined for <type, client-id>, but has a value for
+#                                 <type, '***'>, then the default (***) value is
+#                                 returned.
 #
-#	getValueList(set-name, client-id, field-name) - same as getValue(),
-#				  but always returns list, even if value is a single
-#				  item. In such case, it returns list of single item.
+#       getValueList(set-name, client-id, field-name) - same as getValue(),
+#                                 but always returns list, even if value is a single
+#                                 item. In such case, it returns list of single item.
 #
-#	names(set-name, client-id)	- returns list of field names defined for i
-#				  <set, client-id>, including those defined for 
-#				  <set, '***'>. 
-#				  This method can be used when field names are unknown:
-#				
-#					cfg=ConfigFile('zoo.cfg')
-#					for t in cfg.names('food','lion'):
-#						print "Lion's dish for %s is %s" % (t,
-#							cfg.getValue('food','lion',t)
+#       names(set-name, client-id)      - returns list of field names defined for i
+#                                 <set, client-id>, including those defined for 
+#                                 <set, '***'>. 
+#                                 This method can be used when field names are unknown:
+#                               
+#                                       cfg=ConfigFile('zoo.cfg')
+#                                       for t in cfg.names('food','lion'):
+#                                               print "Lion's dish for %s is %s" % (t,
+#                                                       cfg.getValue('food','lion',t)
 #
-#	ids(set-name)		- returns list of client ids for defined for given set:
-#				  
-#					for species in cfg.ids('food'):
-#						print "Species: %s" % species
-#				  
+#       ids(set-name)           - returns list of client ids for defined for given set:
+#                                 
+#                                       for species in cfg.ids('food'):
+#                                               print "Species: %s" % species
+#                                 
 #
 #
-#				
+#                               
 #
 # $Log: config.py,v $
 # Revision 1.9  2003/08/22 18:38:42  ivm
@@ -142,216 +142,216 @@ import Parser
 import string
 import re
 
-class	ConfigFile:
-	RangeRE = re.compile('(?P<head>.*)<(?P<begin>\d+)-(?P<end>\d+)>')
-	StrNumRE = re.compile('(?P<head>[^0-9]*)(?P<num>\d+)')
-	
-	def __init__(self, file = None):
-		self.Dict = {}
-		if file:	self.readConfig(file)
+class   ConfigFile:
+        RangeRE = re.compile('(?P<head>.*)<(?P<begin>\d+)-(?P<end>\d+)>')
+        StrNumRE = re.compile('(?P<head>[^0-9]*)(?P<num>\d+)')
+        
+        def __init__(self, file = None):
+                self.Dict = {}
+                if file:        self.readConfig(file)
 
-	def getUpdate(self):
-		return ConfigFile(self.File)
+        def getUpdate(self):
+                return ConfigFile(self.File)
 
-	def readConfig(self, file):
-		self.File = file
-		self.reReadConfig()
-		#print self.Dict
+        def readConfig(self, file):
+                self.File = file
+                self.reReadConfig()
+                #print self.Dict
 
-	def reReadConfig(self):
-		f = open(self.File, 'r')
-		l = f.readline()
-		self.Dict = {}
-		curSet = None
-		while l:
-			words = string.split(l)
-			if len(words) > 0 and words[0] == '%set':
-				l = self.readSet(words[1:], f)
-			else:
-				l = f.readline()
-		f.close()
+        def reReadConfig(self):
+                f = open(self.File, 'r')
+                l = f.readline()
+                self.Dict = {}
+                curSet = None
+                while l:
+                        words = string.split(l)
+                        if len(words) > 0 and words[0] == '%set':
+                                l = self.readSet(words[1:], f)
+                        else:
+                                l = f.readline()
+                f.close()
 
-	def readSet(self, setname, f):
-		if len(setname) >= 1:
-			client_type = setname[0]
-			client_id = '***'
-			if len(setname) >= 2 and setname[1][0] != '#':
-				client_id = setname[1]
-			if not self.Dict.has_key(client_type):
-				self.Dict[client_type] = {}
-			set = {}
-			l = f.readline()
-			while l:
-				w = Parser.parseWords(l)
-				if len(w) > 0 and w[0] == '%set':
-					break
-				name, values = Parser.parseLine(l)
-				#print 'line:<%s> name:<%s> values:<%s>' % (l, name, values) 
-				l = f.readline()
-				if name != None:
-					while l:
-						lst = Parser.parseWords(l)
-						if len(lst) > 0 and lst[0] == '%set':
-							break
-						if not l[0] in [' ','\t']:
-							n1, lst = Parser.parseLine(l)
-							#print 'cont: ', n1, lst
-							if n1 != None:
-								break
-						values = values + lst
-						l = f.readline()
-					set[name] = values
-			self.Dict[client_type][client_id] = set
-		else:
-			l = f.readline()
-		return l
+        def readSet(self, setname, f):
+                if len(setname) >= 1:
+                        client_type = setname[0]
+                        client_id = '***'
+                        if len(setname) >= 2 and setname[1][0] != '#':
+                                client_id = setname[1]
+                        if client_type not in self.Dict:
+                                self.Dict[client_type] = {}
+                        set = {}
+                        l = f.readline()
+                        while l:
+                                w = Parser.parseWords(l)
+                                if len(w) > 0 and w[0] == '%set':
+                                        break
+                                name, values = Parser.parseLine(l)
+                                #print 'line:<%s> name:<%s> values:<%s>' % (l, name, values) 
+                                l = f.readline()
+                                if name != None:
+                                        while l:
+                                                lst = Parser.parseWords(l)
+                                                if len(lst) > 0 and lst[0] == '%set':
+                                                        break
+                                                if not l[0] in [' ','\t']:
+                                                        n1, lst = Parser.parseLine(l)
+                                                        #print 'cont: ', n1, lst
+                                                        if n1 != None:
+                                                                break
+                                                values = values + lst
+                                                l = f.readline()
+                                        set[name] = values
+                        self.Dict[client_type][client_id] = set
+                else:
+                        l = f.readline()
+                return l
 
-	def rangeMatch(self, ptrn, theid):
-		ptmatch = self.RangeRE.match(ptrn)
-		if ptmatch == None or ptmatch.end() != len(ptrn):
-			return 0
-		idmatch = self.StrNumRE.match(theid)
-		if idmatch == None or idmatch.end() != len(theid):
-			return 0
-		if ptmatch.group('head') != idmatch.group('head'):
-			return 0
-		n1 = ptmatch.group('begin')
-		n2 = ptmatch.group('end')
-		n = idmatch.group('num')
-		nn = string.atoi(n)
-		if nn < string.atoi(n1) or nn > string.atoi(n2):
-			return 0
-		return len(n1) != len(n2) or len(n) == len(n1)
+        def rangeMatch(self, ptrn, theid):
+                ptmatch = self.RangeRE.match(ptrn)
+                if ptmatch == None or ptmatch.end() != len(ptrn):
+                        return 0
+                idmatch = self.StrNumRE.match(theid)
+                if idmatch == None or idmatch.end() != len(theid):
+                        return 0
+                if ptmatch.group('head') != idmatch.group('head'):
+                        return 0
+                n1 = ptmatch.group('begin')
+                n2 = ptmatch.group('end')
+                n = idmatch.group('num')
+                nn = string.atoi(n)
+                if nn < string.atoi(n1) or nn > string.atoi(n2):
+                        return 0
+                return len(n1) != len(n2) or len(n) == len(n1)
 
-	def idMatch(self, ptrn, theid):
-		if self.rangeMatch(ptrn, theid):
-			return 1
-		match = re.match(ptrn, theid)
-		return match != None and match.group() == theid			
+        def idMatch(self, ptrn, theid):
+                if self.rangeMatch(ptrn, theid):
+                        return 1
+                match = re.match(ptrn, theid)
+                return match != None and match.group() == theid                 
 
-	def __getitem__(self, type_id_name):
-		c_type, c_id, p_name = type_id_name
-		values = None
-		try:
-			type_set = self.Dict[c_type]
-			if type_set.has_key(c_id):
-				try:	values = type_set[c_id][p_name]
-				except KeyError:
-					pass
-			if values == None:
-				for ptrn, dict in type_set.items():
-					# if ptrn looks like <string><<number>-<number>>
-					if ptrn != '***' and self.idMatch(ptrn, c_id) and \
-							dict.has_key(p_name):
-						values = dict[p_name]
-						break
-			if values == None:
-				values = type_set['***'][p_name]
-		except KeyError:
-			pass
-		if type(values) == type([]) and len(values) == 1:
-			return values[0]
-		else:
-			return values
+        def __getitem__(self, type_id_name):
+                c_type, c_id, p_name = type_id_name
+                values = None
+                try:
+                        type_set = self.Dict[c_type]
+                        if c_id in type_set:
+                                try:    values = type_set[c_id][p_name]
+                                except KeyError:
+                                        pass
+                        if values == None:
+                                for ptrn, dict in list(type_set.items()):
+                                        # if ptrn looks like <string><<number>-<number>>
+                                        if ptrn != '***' and self.idMatch(ptrn, c_id) and \
+                                                        p_name in dict:
+                                                values = dict[p_name]
+                                                break
+                        if values == None:
+                                values = type_set['***'][p_name]
+                except KeyError:
+                        pass
+                if type(values) == type([]) and len(values) == 1:
+                        return values[0]
+                else:
+                        return values
 
-	def getValue(self, typ, id, name, deflt = None):
-		v = self[(typ, id, name)]
-		if v == None: v = deflt
-		return v
+        def getValue(self, typ, id, name, deflt = None):
+                v = self[(typ, id, name)]
+                if v == None: v = deflt
+                return v
 
-	def getValueList(self, typ, id, name, deflt = None):
-		v = self.getValue(typ, id, name, deflt)
-		if v == None:	return None
-		if type(v) != type([]): v = [v]
-		return v
+        def getValueList(self, typ, id, name, deflt = None):
+                v = self.getValue(typ, id, name, deflt)
+                if v == None:   return None
+                if type(v) != type([]): v = [v]
+                return v
 
-	def getValueDict(self, typ, id, name, defValue = None, cvtInts = 1):
-		lst = self.getValueList(typ, id, name)
-		if lst == None:	return None
-		dict = Parser.wordsToDict(lst, defValue, cvtInts)
-		return dict
-			
-	def names(self, typ, id):
-		lst = []
-		if self.Dict.has_key(typ):
-			found = 0
-			tdct = self.Dict[typ]
-			if tdct.has_key(id):
-				found = 1
-				lst = tdct[id].keys()
-			if not found:
-				for k, dct in tdct.items():
-					if k != '***' and self.idMatch(k, id):
-						found = 1
-						lst = dct.keys()
-						break
-			if not found and tdct.has_key('***'):
-				lst = tdct['***'].keys()
-		return lst
+        def getValueDict(self, typ, id, name, defValue = None, cvtInts = 1):
+                lst = self.getValueList(typ, id, name)
+                if lst == None: return None
+                dict = Parser.wordsToDict(lst, defValue, cvtInts)
+                return dict
+                        
+        def names(self, typ, id):
+                lst = []
+                if typ in self.Dict:
+                        found = 0
+                        tdct = self.Dict[typ]
+                        if id in tdct:
+                                found = 1
+                                lst = list(tdct[id].keys())
+                        if not found:
+                                for k, dct in list(tdct.items()):
+                                        if k != '***' and self.idMatch(k, id):
+                                                found = 1
+                                                lst = list(dct.keys())
+                                                break
+                        if not found and '***' in tdct:
+                                lst = list(tdct['***'].keys())
+                return lst
 
-	def ids(self, typ):
-		lst = []
-		if self.Dict.has_key(typ):
-			for k in self.Dict[typ].keys():
-				if k != '***':
-					lst.append(k)
-		return lst
+        def ids(self, typ):
+                lst = []
+                if typ in self.Dict:
+                        for k in list(self.Dict[typ].keys()):
+                                if k != '***':
+                                        lst.append(k)
+                return lst
 
-	def types(self):
-		return self.Dict.keys()
+        def types(self):
+                return list(self.Dict.keys())
 
-	def hasSet(self, setType, setID = None):
-		if not self.Dict.has_key(setType):
-			return 0
-		if setID == None:	return 1
-		return self.Dict[setType].has_key(setID)
+        def hasSet(self, setType, setID = None):
+                if setType not in self.Dict:
+                        return 0
+                if setID == None:       return 1
+                return setID in self.Dict[setType]
 
 def writeConfigFile(cfgdict, f):
-	# writes configuration described by cfgdict to a file
-	# cfgdict is in form:
-	# set_type -> 
-	#	{ set_id or '' ->
-	#		{ field -> value or [values] or dict }
-	do_close = 0
-	if type(f) == type(''):
-		f = open(f, 'w')
-		do_close = 1
-	for set_type, sets in cfgdict.items():
-		ids = sets.keys()
-		ids.sort()
-		for set_id in ids:
-			set_dict = sets[set_id]
-			f.write('%%set %s %s\n' % (set_type, set_id))
-			for fn, fv in set_dict.items():
-				valstr = ''
-				if type(fv) == type(''):
-					valstr = fv
-				elif type(fv) == type(1):
-					valstr = '%d' % fv
-				elif type(fv) == type(1.0):
-					valstr = '%f' % fv
-				elif type(fv) == type([]):
-					for x in fv:
-						valstr = valstr + '%s ' % x
-				elif type(fv) == type({}):
-					for k, v in fv.items():
-						if v or type(v) == type(1):
-							valstr = valstr + '%s:%s ' % (k, v)
-						else:
-							valstr = valstr + '%s ' % k
-				f.write('%s = %s\n' % (fn, valstr))
-			f.write('\n')
-	if do_close:	f.close()
-	
+        # writes configuration described by cfgdict to a file
+        # cfgdict is in form:
+        # set_type -> 
+        #       { set_id or '' ->
+        #               { field -> value or [values] or dict }
+        do_close = 0
+        if type(f) == type(''):
+                f = open(f, 'w')
+                do_close = 1
+        for set_type, sets in list(cfgdict.items()):
+                ids = list(sets.keys())
+                ids.sort()
+                for set_id in ids:
+                        set_dict = sets[set_id]
+                        f.write('%%set %s %s\n' % (set_type, set_id))
+                        for fn, fv in list(set_dict.items()):
+                                valstr = ''
+                                if type(fv) == type(''):
+                                        valstr = fv
+                                elif type(fv) == type(1):
+                                        valstr = '%d' % fv
+                                elif type(fv) == type(1.0):
+                                        valstr = '%f' % fv
+                                elif type(fv) == type([]):
+                                        for x in fv:
+                                                valstr = valstr + '%s ' % x
+                                elif type(fv) == type({}):
+                                        for k, v in list(fv.items()):
+                                                if v or type(v) == type(1):
+                                                        valstr = valstr + '%s:%s ' % (k, v)
+                                                else:
+                                                        valstr = valstr + '%s ' % k
+                                f.write('%s = %s\n' % (fn, valstr))
+                        f.write('\n')
+        if do_close:    f.close()
+        
 if __name__ == '__main__':
-	import sys
-	cfg = ConfigFile(sys.argv[1])
-	print cfg.names(sys.argv[2], sys.argv[3])
+        import sys
+        cfg = ConfigFile(sys.argv[1])
+        print(cfg.names(sys.argv[2], sys.argv[3]))
 
 
-				
-				
-				
-				
-			
-						
+                                
+                                
+                                
+                                
+                        
+                                                

@@ -59,9 +59,9 @@ class   SelectorPoll:
         
     def _updatePoll(self, fd):
         mask = 0
-        if self.RdObjMap.has_key(fd):   mask |= select.POLLIN
-        if self.WrObjMap.has_key(fd):   mask |= select.POLLOUT
-        if self.ExObjMap.has_key(fd):   mask |= select.POLLERR | select.POLLHUP
+        if fd in self.RdObjMap:   mask |= select.POLLIN
+        if fd in self.WrObjMap:   mask |= select.POLLOUT
+        if fd in self.ExObjMap:   mask |= select.POLLERR | select.POLLHUP
         if mask:    self.Poll.register(fd, mask)
         else:
             try:    self.Poll.unregister(fd)
@@ -91,7 +91,7 @@ class   SelectorPoll:
         return self._unregister(fd, self.ExObjMap)
         
     def _unregister(self, fd, mapdict):
-        if mapdict.has_key(fd): del mapdict[fd]
+        if fd in mapdict: del mapdict[fd]
         self._updatePoll(fd)
 
     def unregisterFD(self, fd):
