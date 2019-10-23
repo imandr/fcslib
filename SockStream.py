@@ -146,7 +146,7 @@ import socket
 
 def to_bytes(s):
     if isinstance(s, str):
-        s = bytes(str, "utf-8")
+        s = bytes(s, "utf-8")
     return s
     
 def to_str(b):
@@ -189,7 +189,7 @@ class   SockStream:
         def setBlocking(self, block):
                 self.Sock.setblocking(block)
                 
-        def     readMore(self, maxmsg = 1024, tmo = -1):
+        def readMore(self, maxmsg = 1024, tmo = -1):
                 if not self.EOF:
                         msg = b''
                         if tmo == -1:   tmo = None
@@ -218,17 +218,16 @@ class   SockStream:
         def lastHeard(self):
                 return time.time() - self.LastTxn
 
-        def     getMsg(self):
-                i = self.Buf.find(self.Eom)
-                if i < 0:
-                        return None
-                str =  self.Buf[:i]
-                self.Buf = self.Buf[i+len(self.Eom):]           # skip EOM
-                return str
+        def getMsg(self):
+                if self.Eom in self.Buf:
+                    msg, self.Buf = self.Buf.split(self.Eom, 1)
+                    return to_str(msg)
+                else:
+                    return None
 
         def msgReady(self):
-            print("msgReady: buf: %s, eom: %s" % (repr(self.Buf), repr(self.Eom)))
-            return self.Buf.find(self.Eom) >= 0
+            #print("msgReady: buf: %s, eom: %s" % (repr(self.Buf), repr(self.Eom)))
+            return self.Eom in self.Buf
 
         def send(self, msg, tmo = -1):
                 # send one or list of messages
@@ -237,10 +236,12 @@ class   SockStream:
                 nsent = 0
                 while msg:
                         n = min(100, len(msg))
-                        text = self.Eom.join(msg[:n]) + self.Eom
+                        batch = msg[:n]
+                        msg = msg[n:]
+                        batch = (to_bytes(x) for x in batch)
+                        text = self.Eom.join(batch) + self.Eom
                         ns = self._send(text, tmo)
                         if ns <= 0:     break
-                        msg = msg[n:]
                         nsent = nsent + ns
                 return nsent                    
 
@@ -299,7 +300,7 @@ class   SockStream:
                                         return None
                 return self.getMsg()
 
-        def     sendAndRecv(self, msg, tmo = -1):
+        def sendAndRecv(self, msg, tmo = -1):
                 self.send(msg, tmo = tmo)
                 return self.recv(tmo = tmo)
 

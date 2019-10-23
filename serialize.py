@@ -17,8 +17,6 @@
 #
 #
 
-import string
-
 def serializeString(s):
         r = repr(s)
         return '"%d:%s' % (len(r),r)
@@ -77,7 +75,7 @@ def deserialize(str):
 def _parse(str):
         # returns object, rest
         # generates SyntaxError, (reason, unparsed text)
-        str = string.strip(str)
+        str = str.strip()
         c = str[0]
         if c == '(':
                 t, rest = _parse_list_or_tuple(str[1:],')')
@@ -103,72 +101,72 @@ def _parse(str):
 def _parse_number(str):
         # integer or floating point number
         l = len(str)
-        i = string.find(str, ' ')
+        i = str.find(' ')
         if i >= 0:
                 l = i
-        x = string.strip(str[:l])
+        x = str[:l].strip()
         rest = str[l:]
         if len(x) > 1 and x[-1] == 'L':
                 n = eval(x)
-                return n, string.strip(rest)
-        try:    n = string.atoi(x)
+                return n, rest.strip()
+        try:    n = int(x)
         except: pass
         else:   return n, rest
-        try:    n = string.atof(x)
+        try:    n = float(x)
         except: raise SyntaxError('Unrecognized input',str)
-        return n, string.strip(rest)
+        return n, rest.strip()
 
 def _parse_string(str):
-        i = string.find(str,':')
+        i = str.find(':')
         if i < 0:
                 raise SyntaxError('String length not found', str)
         try:
-                l = string.atoi(str[:i])
+                l = int(str[:i])
         except:
                 raise SyntaxError('Wrong format of string lenght', str)
         return eval(str[i+1:i+1+l]), str[i+1+l:]
 
 def _parse_list_or_tuple(str, end):
         lst = []
-        str = string.strip(str)
+        str = str.strip()
         while str:
                 if str[0] == end:
-                        str = string.strip(str[1:])
+                        str = str[1:].strip()
                         break
                 else:
                         x, rest = _parse(str)
                         lst.append(x)
-                        str = string.strip(rest)
+                        str = rest.strip()
         return lst, str
 
 def _parse_dict(str):
         dict = {}
-        str = string.strip(str)
+        str = str.strip()
         while str:
                 if str[0] == '}':
-                        str = string.strip(str[1:])
+                        str = str[1:].strip()
                         break
                 k, str = _parse(str)
                 v, str = _parse(str)
                 dict[k] = v
-                str = string.strip(str)
+                str = str.strip()
         return dict, str
 
 class   _Clay:
         pass
 
 def _parse_object(str):
-        str = string.strip(str)
-        i = string.find(str, ' ')
+        str = str.strip()
+        i = str.find(' ')
         if i < 0:
                 raise SyntaxError('Can not find module name for object', str)
         mod = str[:i]
-        str = string.strip(str[i+1:])
-        i = string.find(str, ' ')
+        str = str[i+1:].strip()
+        i = str.find(' ')
         if i < 0:
                 raise SyntaxError('Can not find class name for object', str)
         cls = str[:i]
-        str = string.strip(str[i+1:])
+        str = str[i+1:].strip()
         if str[0] != '{':
                 raise SyntaxError('Can not find object dictionary', str)
         dict, str = _parse_dict(str[1:])

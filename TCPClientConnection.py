@@ -36,7 +36,7 @@ class   TCPClientConnection:
                 while not self.Disconnected and self.Str.msgReady():
                         msg = self.Str.getMsg()
                         if not msg: continue
-                        words = string.split(msg)
+                        words = msg.split()
                         if not words:   continue
                         #print words
                         ans = self.processMsg(words[0], words[1:], msg)
