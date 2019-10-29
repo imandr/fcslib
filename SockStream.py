@@ -189,19 +189,22 @@ class   SockStream:
         def setBlocking(self, block):
                 self.Sock.setblocking(block)
                 
-        def readMore(self, maxmsg = 1024, tmo = -1):
+        def __readMore(self, maxmsg = 1024, tmo = -1):
+                #print ("SockStream.readMore: EOF=", self.EOF)
                 if not self.EOF:
                         msg = b''
                         if tmo == -1:   tmo = None
                         fd = self.Sock.fileno()
+                        #print("SockStream.readMore: select(%s)..." % (tmo,))
                         r,w,e = select.select([fd],[],[],tmo)
+                        #print("SockStream.readMore: r,w,e:", r,w,e)
                         if not r:
                                 raise IOError('Time-out')
                         try:    
                                 msg = self.Sock.recv(maxmsg)
-                                #print 'SockStream.readMore: msg=<%s>' % msg
-                        except: 
-                                #print 'readMore: exception: ', sys.exc_type, sys.exc_value
+                                #print ('SockStream.readMore: msg=[%s]' % msg)
+                        except Exception as e: 
+                                #print ('SockStream.readMore: exception: ', e)
                                 #print 'readMore: EOF -> 1'
                                 self.EOF = 1
                         if len(msg) == 0:
@@ -213,6 +216,39 @@ class   SockStream:
                                 self.LastTxn = time.time()
                                 self.Buf = self.Buf + msg
                                 self._zingZong()
+                return self.msgReady()
+
+        def readMore(self, maxmsg = 1024, tmo = -1):
+                #print ("SockStream.readMore: EOF=", self.EOF, "   tmo:", tmo)
+                if not self.EOF:
+                        msg = b''
+                        if tmo == -1:   tmo = None
+                        saved_tmo = self.Sock.gettimeout()
+                        self.Sock.settimeout(tmo)
+                        try:    
+                            #print ("SockStream.readMore: sock.recv...")
+                            msg = self.Sock.recv(maxmsg)
+                            #print("SockStream.readMore: received: [%s]" % (msg,))
+                        except socket.timeout:
+                                #print ("SockStream.readMore: timeout")
+                                raise IOError('Time-out')
+                        except Exception as e: 
+                                #print ('SockStream.readMore: exception: ', e)
+                                #print 'readMore: EOF -> 1'
+                                pass
+                        finally:
+                                self.Sock.settimeout(saved_tmo)
+                        #print("SockStream.readMore: msg: [%s]" % (msg,))
+                        if not msg:
+                                #print 'readMore: len = 0'
+                                #print 'readMore: EOF -> 1'
+                                self.EOF = 1
+                                self.unregister()
+                        else:
+                                self.LastTxn = time.time()
+                                self.Buf = self.Buf + msg
+                                self._zingZong()
+                #print("SockStream.readMore: exit: msgReady: %s, EOF: %s" % (self.msgReady(), self.EOF))
                 return self.msgReady()
 
         def lastHeard(self):
@@ -227,6 +263,7 @@ class   SockStream:
 
         def msgReady(self):
             #print("msgReady: buf: %s, eom: %s" % (repr(self.Buf), repr(self.Eom)))
+            #print("SockStream: msgReady:", self.Eom in self.Buf)
             return self.Eom in self.Buf
 
         def send(self, msg, tmo = -1):
@@ -295,10 +332,14 @@ class   SockStream:
 
         def recv(self, maxmsg=1024, tmo = -1):
                 if not self.msgReady():
+                        #print("SockStream.recv: calling readMore...")
                         while not self.readMore(maxmsg, tmo):
                                 if self.eof():
                                         return None
-                return self.getMsg()
+                #print("SockStream.recv: calling getMsg...")
+                msg = self.getMsg()
+                #print("SockStream.recv: msg: [%s]" % (msg,))
+                return msg
 
         def sendAndRecv(self, msg, tmo = -1):
                 self.send(msg, tmo = tmo)

@@ -153,7 +153,6 @@
 #               parseConfig(file) will return
 #               { 'a':'b', 'c':[1,2,'x']}
 #
-import string
 
 def wordsToDict(strOrWords, defValue = None, cvtInts = 1):
         dict = {}
@@ -163,7 +162,7 @@ def wordsToDict(strOrWords, defValue = None, cvtInts = 1):
                 words = strOrWords
         for w in words:
                 if not w:       continue
-                inx = string.find(w, ':')
+                inx = w.find(':')
                 if inx < 0:
                         k = w
                         v = defValue
@@ -171,7 +170,7 @@ def wordsToDict(strOrWords, defValue = None, cvtInts = 1):
                         k = w[:inx]
                         v = w[inx+1:]
                         if cvtInts:
-                                try:    v = string.atoi(v)
+                                try:    v = int(v)
                                 except: pass
                 dict[k] = v
         return dict             
@@ -179,18 +178,18 @@ def wordsToDict(strOrWords, defValue = None, cvtInts = 1):
 def     parseLine(str, cvtInts = 1):
         name = None
         rest = str
-        ipound = string.find(str, '#')
-        ieq = string.find(str, '=')
+        ipound = str.find('#')
+        ieq = str.find('=')
         if ieq > 0 and (ipound > ieq or ipound < 0):
-                name = string.strip(str[:ieq])
-                rest = string.strip(str[ieq+1:])
+                name = str[:ieq].strip()
+                rest = str[ieq+1:].strip()
         words = parseWords(rest, cvtInts = cvtInts)
         return name, words
 
 def     _findAny(str, chars):
         inx = -1
         for c in chars:
-                i = string.find(str,c)
+                i = str.find(c)
                 if inx < 0 or (i > 0 and i < inx):
                         inx = i
         return inx
@@ -234,7 +233,7 @@ def     parseConfig(file):
 
 def     parseWords(str, maxWords = -1, cvtInts = 1):
         words = []
-        rest = string.strip(str)
+        rest = str.strip()
         while rest and (maxWords < 0 or len(words) < maxWords):
                 if rest[0] == "'":
                         word, rest = getWord(rest[1:], "'")
@@ -245,10 +244,10 @@ def     parseWords(str, maxWords = -1, cvtInts = 1):
                         if len(word) > 0 and word[0] == '#':
                                 break   # comment
                 if cvtInts:
-                        try:    word = string.atoi(word)
+                        try:    word = int(word)
                         except ValueError:
                                 pass
-                rest = string.strip(rest)
+                rest = rest.strip()
                 words.append(word)
         if maxWords < 0:
                 return words

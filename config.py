@@ -139,7 +139,6 @@
 #
 #
 import Parser
-import string
 import re
 
 class   ConfigFile:
@@ -164,7 +163,7 @@ class   ConfigFile:
                 self.Dict = {}
                 curSet = None
                 while l:
-                        words = string.split(l)
+                        words = l.split()
                         if len(words) > 0 and words[0] == '%set':
                                 l = self.readSet(words[1:], f)
                         else:
@@ -218,8 +217,8 @@ class   ConfigFile:
                 n1 = ptmatch.group('begin')
                 n2 = ptmatch.group('end')
                 n = idmatch.group('num')
-                nn = string.atoi(n)
-                if nn < string.atoi(n1) or nn > string.atoi(n2):
+                nn = int(n)
+                if nn < int(n1) or nn > int(n2):
                         return 0
                 return len(n1) != len(n2) or len(n) == len(n1)
 
