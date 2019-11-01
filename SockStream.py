@@ -294,7 +294,7 @@ class   SockStream:
                         if not w:
                                 break
                         n = -1
-                        try:    n = self.Sock.send(self.OutBuf)
+                        try:    n = self.Sock.sendall(self.OutBuf)
                         except socket.error as val:
                                 errn, msg = val.args
                                 if errn == errno.EWOULDBLOCK:
