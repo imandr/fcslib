@@ -1,11 +1,13 @@
 VERSION = 3.0
 
 LIBFILES = Parser.py      SockStream.py  config.py      futil.py \
-	Selector.py    TCPServer.py   cvtime.py serialize.py __init__.py TCPClientConnection.py
+	Selector.py    TCPServer.py   cvtime.py serialize.py __init__.py TCPClientConnection.py \
+	TCPClientConnectionTask.py TCPServerThread.py
+	
 UPSFILES = fcslib.table
 EXMFILES = examples/echo-client.py examples/echo-server.py examples/echo-nb-server.py
 
-DSTROOT = ./dst-root
+DSTROOT = $(HOME)/build/fcslib
 UPSDIR = $(DSTROOT)/ups
 LIBDIR = $(DSTROOT)/fcslib
 EXMDIR = $(DSTROOT)/examples
@@ -27,7 +29,6 @@ upstar: $(DIRS)
 	cp README ABSTRACT $(DSTROOT)
 	chmod ugo+rx $(DSTROOT)/README
 	cd $(DSTROOT);	tar cf $(TARFILE) *
-	rm -rf $(DSTROOT)
 	@echo ""
 	@echo $(TARFILE) is ready
 	@echo ""

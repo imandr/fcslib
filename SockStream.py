@@ -266,7 +266,27 @@ class   SockStream:
             #print("SockStream: msgReady:", self.Eom in self.Buf)
             return self.Eom in self.Buf
 
-        def send(self, msg, tmo = -1):
+        def send(self, msg, tmo = None):
+            assert isinstance(msg, (str, bytes))
+            data = to_bytes(msg) + self.Eom
+            saved_tmo = self.Sock.gettimeout()
+            sent = False
+            try:
+                self.Sock.settimeout(tmo)
+                self.Sock.sendall(data)
+                sent = True
+            except Exception as e:
+                #print("Error sending message:", e)
+                sent = False
+            finally:
+                try:
+                    self.Sock.settimeout(saved_tmo)
+                except:
+                    pass
+            return sent
+            
+
+        def send___(self, msg, tmo = -1):
                 # send one or list of messages
                 if not isinstance(msg, list):
                         msg = [msg]
@@ -290,11 +310,11 @@ class   SockStream:
                 while self.OutBuf and not self.EOF:
                         #print 'SockStream.send(): msg = <%s>, nsent = %d' % (msg, nsent)
                         # use select to wait for socket buffer to clear at least 1 byte
-                        r,w,e = select.select([],[self.Sock.fileno()],[],tmo)
-                        if not w:
+                        r,w,e = select.select([],[self.Sock.fileno()],[self.Sock.fileno()],tmo)
+                        if not w and not e:
                                 break
                         n = -1
-                        try:    n = self.Sock.sendall(self.OutBuf)
+                        try:    n = self.Sock.send(self.OutBuf)
                         except socket.error as val:
                                 errn, msg = val.args
                                 if errn == errno.EWOULDBLOCK:
@@ -330,7 +350,7 @@ class   SockStream:
         def eof(self):
                 return not self.msgReady() and self.EOF
 
-        def recv(self, maxmsg=1024, tmo = -1):
+        def recv(self, maxmsg=1024, tmo = None):
                 if not self.msgReady():
                         #print("SockStream.recv: calling readMore...")
                         while not self.readMore(maxmsg, tmo):
@@ -341,7 +361,7 @@ class   SockStream:
                 #print("SockStream.recv: msg: [%s]" % (msg,))
                 return msg
 
-        def sendAndRecv(self, msg, tmo = -1):
+        def sendAndRecv(self, msg, tmo = None):
                 self.send(msg, tmo = tmo)
                 return self.recv(tmo = tmo)
 
