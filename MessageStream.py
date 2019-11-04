@@ -31,7 +31,7 @@ class MessageStream(object):
         if isinstance(sock_or_addr, tuple):
             sock = socket(AF_INET, SOCK_STREAM)
             sock.settimeout(tmo)
-            print("connecting to:", sock_or_addr)
+            #print("connecting to:", sock_or_addr)
             try:    sock.connect(sock_or_addr)
             except socket_timeout:
                 raise Timeout()
