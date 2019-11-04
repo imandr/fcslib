@@ -27,6 +27,7 @@ class MessageStream(object):
     VERSION = "1.0"
     
     def __init__(self, sock_or_addr, tmo=None):
+        self.Sock = None
         if isinstance(sock_or_addr, tuple):
             sock = socket(AF_INET, SOCK_STREAM)
             sock.settimeout(tmo)
