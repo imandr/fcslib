@@ -1,5 +1,6 @@
 import time
 from socket import timeout as socket_timeout
+from socket import socket, SOCK_STREAM, AF_INET
 
 class Timeout(Exception):
     pass
@@ -25,48 +26,74 @@ class MessageStream(object):
     
     VERSION = "1.0"
     
-    def __init__(self, sock):
+    def __init__(self, sock_or_addr, tmo=None):
+        if isinstance(sock_or_addr, tuple):
+            sock = socket(AF_INET, SOCK_STREAM)
+            sock.settimeout(tmo)
+            print("connecting to:", sock_or_addr)
+            try:    sock.connect(sock_or_addr)
+            except socket_timeout:
+                raise Timeout()
+            sock.settimeout(None)
+        elif isinstance(sock_or_addr, socket):
+            sock = sock_or_addr
+        else:
+            raise ValueError("Can not create MessageStream from %s %s" % (type(sock_or_addr), sock_or_addr))
         self.Sock = sock
-        self.EOF = False
+        self.Closed = False
         
+    def eof(self):      # compatibility
+        return self.Closed
+        
+    @property
+    def EOF(self):
+        return self.Closed
+        
+    def fileno(self):
+        return None if (self.Closed or self.Sock is None) else self.Sock.fileno()
+
     def send(self, msg, tmo=None):
+        if self.Closed: return False
         header = "M:%10s:%020d:" % (self.VERSION, len(msg))
         saved_tmo = self.Sock.gettimeout()
         self.Sock.settimeout(tmo)
         try:        
             self.Sock.sendall(to_bytes(header)+to_bytes(msg))
-            print ("send: sent successfully")
-            return True
         except socket_timeout:
             raise Timeout()
+        except:
+            self.close()
+            return False
         finally:
-            self.Sock.settimeout(saved_tmo)
+            if not self.Closed: self.Sock.settimeout(saved_tmo)
+        return True
         
     def zing(self):
         self.Sock.sendall(b"Z:")
         
     def _read_n(self, n, t1=None):
-        if n <= 0:  return b''
+        if n <= 0 or self.Closed:  return b''
         t0 = time.time()
         nread = 0
         n_to_read = n
         data_read = b''
         saved_tmo = self.Sock.gettimeout()
         try:
-            while (t1 is None or time.time() < t1) and n_to_read > 0:
+            while not self.Closed and (t1 is None or time.time() < t1) and n_to_read > 0:
                 d = None if t1 is None else max(0.0, t1-time.time())
                 self.Sock.settimeout(d)
                 data = self.Sock.recv(n_to_read)
                 if not len(data):
+                    self.close()
                     return data_read
                 data_read += data
                 n_to_read -= len(data)
         except socket_timeout:
             raise Timeout()
         except:
-            self.EOF = True
+            self.close()
         finally:
-            self.Sock.settimeout(saved_tmo)
+            if not self.Closed: self.Sock.settimeout(saved_tmo)
         return data_read
             
     def _recv_msg(self, t1=None):
@@ -95,16 +122,15 @@ class MessageStream(object):
             
     def recv(self, tmo=None):
         t1 = None if tmo is None else time.time() + tmo
-        while self.Sock is not None and not self.EOF:
+        while self.Sock is not None and not self.Closed:
             t, data = self._recv_msg(t1)
             if t == 'Z':
                 self.Sock.sendall(b'z:')            # send zong
             elif t == 'z':
                 pass                                # ignore zongs
             elif t == 'M':
-                return data
+                return to_str(data)
             elif t is None:
-                self.EOF = True
                 return None
             else:
                 raise ProtocolError(t)
@@ -115,9 +141,14 @@ class MessageStream(object):
         return self.recv(tmo)
         
     def close(self):
-        self.EOF = True
-        self.Sock.close()
+        self.Closed = True
+        if self.Sock is not None:
+            self.Sock.close()
         self.Sock = None
+
+    def __del__(self):
+        self.close()
+        
         
 if __name__ == '__main__':
     import sys
@@ -139,13 +170,14 @@ if __name__ == '__main__':
             stream.send(b"echo: "+msg)
     
     else:
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.connect(('127.0.0.1', 3456))
-        stream = MessageStream(sock)
-        while True:
+        stream = MessageStream.connect(('127.0.0.1', 3456))
+        while not stream.Closed:
             reply = stream.sendAndRecv("hello %f" % (time.time(),))
-            print("client: reply:", reply)
-            time.sleep(3)
+            if reply is None:
+                print("EOF")
+            else:
+                print("client: reply:", reply)
+                time.sleep(3)
         
             
             
