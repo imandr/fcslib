@@ -2,7 +2,7 @@ VERSION = 3.0
 
 LIBFILES = Parser.py      SockStream.py  config.py      futil.py \
 	Selector.py    TCPServer.py   cvtime.py serialize.py __init__.py TCPClientConnection.py \
-	TCPClientConnectionTask.py TCPServerThread.py
+	TCPClientConnectionTask.py TCPServerThread.py MessageStream.py
 	
 UPSFILES = fcslib.table
 EXMFILES = examples/echo-client.py examples/echo-server.py examples/echo-nb-server.py
