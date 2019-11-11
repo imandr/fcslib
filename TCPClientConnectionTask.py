@@ -1,4 +1,4 @@
-from SockStream import *
+from .SockStream import *
 import sys, select, time
 from pythreader import Task
 

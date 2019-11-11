@@ -18,7 +18,7 @@
 #
 #
 
-from SockStream import *
+from .SockStream import *
 import sys
 
 class   TCPClientConnection:
