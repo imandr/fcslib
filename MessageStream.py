@@ -2,7 +2,7 @@ import time
 from socket import timeout as socket_timeout
 from socket import socket, SOCK_STREAM, AF_INET
 
-class Timeout(Exception):
+class StreamTimeout(Exception):
     pass
     
 class ProtocolError(Exception):
