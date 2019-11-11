@@ -34,7 +34,7 @@ class MessageStream(object):
             #print("connecting to:", sock_or_addr)
             try:    sock.connect(sock_or_addr)
             except socket_timeout:
-                raise Timeout()
+                raise StreamTimeout()
             sock.settimeout(None)
         elif isinstance(sock_or_addr, socket):
             sock = sock_or_addr
@@ -61,7 +61,7 @@ class MessageStream(object):
         try:        
             self.Sock.sendall(to_bytes(header)+to_bytes(msg))
         except socket_timeout:
-            raise Timeout()
+            raise StreamTimeout()
         except:
             self.close()
             return False
@@ -90,7 +90,7 @@ class MessageStream(object):
                 data_read += data
                 n_to_read -= len(data)
         except socket_timeout:
-            raise Timeout()
+            raise StreamTimeout()
         except:
             self.close()
         finally:
