@@ -267,6 +267,9 @@ class   SockStream:
             return self.Eom in self.Buf
 
         def send(self, msg, tmo = None):
+            if isinstance(msg, list):
+                for item in msg:
+                    self.send(item)
             assert isinstance(msg, (str, bytes))
             data = to_bytes(msg) + self.Eom
             saved_tmo = self.Sock.gettimeout()
